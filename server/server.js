@@ -14,12 +14,29 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
   console.log('new user connected');
 
+  socket.emit('newMessage', {
+    from: 'Admin',
+    text: 'Welcome to the chat-room',
+    createdAt: Date.now()
+  });
+
+  socket.broadcast.emit('newMessage', {
+    from: 'Server',
+    text: 'A new user has logged in.',
+    createdAt: Date.now()
+  });
+
+
   socket.on('createMessage', (newMessage) => {
     console.log('createMessage', newMessage)
-    socket.emit('newMessage', {
+    io.emit('newMessage', {
       ...newMessage,
       createdAt: Date.now()
-    })
+    });
+    // socket.broadcast.emit('newMessage', {
+    //   ...newMessage,
+    //   createdAt: Date.now()
+    // });
   });
 
   socket.on('disconnect', () => {
