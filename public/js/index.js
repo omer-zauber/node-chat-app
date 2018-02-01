@@ -1,32 +1,33 @@
-const socket = io();
+var socket = io();
 
 socket.on('connect', function () {
   console.log('connected to server');
 });
 
-socket.on('newMessage', function (newMessage) {
-  const { from, text, createdAt } = newMessage;
-  const formatedTime = moment(createdAt).format('k:mm:ss')
-  const li = jQuery('<li></li>');
-  li.text(`${from}(${formatedTime }): ${ text }`);
-  jQuery('#messages').append(li);
+
+socket.on('newMessage', function (message) {
+  var formattedTime = moment(message.createdAt).format('k:mm:ss');
+  var template = jQuery('#message-template').html();
+  var html = Mustache.render(template, {
+    text: message.text,
+    from: message.from,
+    createdAt: formattedTime
+  });
+  jQuery('#messages').append(html);
 });
 
-socket.on('disconnect', function () {
-  console.log('Disconnected from server');
+socket.on('newLocationMessage', function (message) {
+  var formatedTime = moment(message.createdAt).format('k:mm:ss');
+  var template = jQuery('#location-message-template').html();
+  var html = Mustache.render(template, {
+    from: message.from,
+    url: message.url,
+    createdAt: formatedTime
+  });
+  jQuery('#messages').append(html);
 });
 
-socket.on('newLocationMessage', function ({ from, createdAt, url }) {
-  const formatedTime = moment(createdAt).format('k:mm:ss')
-  const li = jQuery('<li></li>');
-  const a = jQuery('<a target="_blank">My current location</a>');
-  li.text(`${from}(${formatedTime }):`);
-  a.attr('href', url);
-  li.append(a);
-  jQuery('#messages').append(li);
-});
-
-const messageTextbox = jQuery('[name=message]');
+var messageTextbox = jQuery('[name=message]');
 
 jQuery('#message-form').on('submit', function (e) {
   e.preventDefault();
@@ -38,7 +39,7 @@ jQuery('#message-form').on('submit', function (e) {
   });
 });
 
-const locationButton = jQuery('#send-location');
+var locationButton = jQuery('#send-location');
 
 locationButton.on('click', function() {
   if(!navigator.geolocation) return alert('Geolocation not suppoerted by your browser.');
@@ -47,7 +48,7 @@ locationButton.on('click', function() {
   
   navigator.geolocation.getCurrentPosition(function (position) {
     locationButton.removeAttr('disabled').text('Send location...');
-    const { latitude, longitude } = position.coords;
+    var { latitude, longitude } = position.coords;
     socket.emit('createLocationMessage', {
       latitude,
       longitude  
@@ -57,4 +58,8 @@ locationButton.on('click', function() {
     locationButton.removeAttr('disabled').text('Send location...');
   });
   
+});
+
+socket.on('disconnect', function () {
+  console.log('Disconnected from server');
 });
