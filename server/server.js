@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
       ...newMessage,
       createdAt: Date.now()
     });
-    callback('Got it..!');
+    callback();
   });
 
   socket.on('createLocationMessage', ({ latitude, longitude }) => {
